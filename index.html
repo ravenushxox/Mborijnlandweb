@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MboRijnland</title>
+<style>
+body{margin:0;font-family:Arial;background:#f4f4f4}
+#app{display:none}
+#loginScreen{height:100vh;background:#9cab2f;display:flex;align-items:center;justify-content:center}
+.box{background:white;padding:25px;border-radius:12px;width:90%;max-width:350px}
+input,button{width:100%;padding:12px;margin-top:10px;font-size:16px;box-sizing:border-box}
+button{background:#9cab2f;border:0;border-radius:6px;font-weight:bold}
+.header{background:#9cab2f;padding:22px;font-size:25px;display:flex;gap:20px}
+.menu-btn{font-size:28px;cursor:pointer}
+.side-menu{position:fixed;left:-260px;top:0;width:260px;height:100%;background:white;transition:.3s;box-shadow:2px 0 10px #0004}
+.side-menu.open{left:0}
+.side-menu h2{padding:20px;margin:0;background:#9cab2f}
+.side-menu div{padding:17px;border-bottom:1px solid #eee}
+.container{max-width:650px;margin:auto}
+.rooster-card{
+  background:white;
+  border-bottom:1px solid #ddd;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+  border-left:5px solid #6f8fcf; /* 🔵 blauwe lijn */
+}
+.timebox {
+  min-width: 70px;
+  font-weight: bold;
+}
+
+.lessonbox {
+  font-size: 17px;
+}
+.card {
+  background: white;
+  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  font-size: 18px;
+}
+
+.rooster-card {
+  background: white;
+  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 25px;
+  border-left: 6px solid #8fb4f4;
+}
+
+.timebox {
+  min-width: 75px;
+  font-weight: bold;
+  line-height: 1.5;
+}
+
+.lessonbox {
+  font-size: 18px;
+  line-height: 1.5;
+}
+.date{background:#e8e8e8;padding:12px;font-weight:bold;font-size:20px}
+.profile{text-align:center}
+.circle{width:180px;height:180px;border-radius:50%;margin:20px auto;background:conic-gradient(#9cab2f 0% 84%,#ddd 84% 100%);display:flex;align-items:center;justify-content:center}
+.circle-inner{width:120px;height:120px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:bold}
+
+</style>
+</head>
+
+<body>
+
+<section id="loginScreen">
+  <div class="card">
+    <h1>MboRijnland</h1>
+    <input id="username" placeholder="E-mailadres">
+    <input id="password" type="password" placeholder="Wachtwoord">
+    <button onclick="login()">Inloggen</button>
+    
+  </div>
+</section>
+<section id="app">
+  <div class="side-menu" id="menu">
+    <h2>Menu</h2>
+    <div onclick="showPage('rooster')">Rooster</div>
+    <div onclick="showPage('cijfers')">Cijfers</div>
+    <div onclick="showPage('huiswerk')">Huiswerk</div>
+    <div onclick="showPage('berichten')">Berichten</div>
+    <div onclick="showPage('aanwezigheid')">Aanwezigheid</div>
+    <div onclick="showPage('student')">Gegevens student</div>
+    <div onclick="logout()">Uitloggen</div>
+  </div>
+
+  <div class="header">
+    <div class="menu-btn" onclick="toggleMenu()">☰</div>
+    <div id="title">Rooster</div>
+  </div>
+
+  <div class="container" id="content"></div>
+ <div class="bottom-nav">
+</div>
+</section>
+
+<script>
+const users = {
+  "0912250@mborijnland.nl": "Annamaria20062006!",
+  "admin@mborijnland.nl": "admin123"
+};
+
+const rooster = [];
+
+const patronen = {
+  1: [
+    ["08:30 - 10:00", "Nederlands"],
+    ["10:15 - 11:45", "Rekenen"],
+    ["12:15 - 13:45", "Engels"],
+    ["14:00 - 15:45", "Workshop"]
+  ],
+  2: [
+    ["09:45 - 11:15", "Economie"],
+    ["11:30 - 13:00", "ICT"],
+    ["13:30 - 15:00", "Presentatie"]
+  ],
+  4: [
+    ["08:30 - 10:00", "D&P"],
+    ["10:15 - 11:45", "Nederlands"],
+    ["12:15 - 13:45", "Assistent"],
+    ["14:00 - 16:00", "Workshop"]
+  ],
+  5: [
+    ["10:00 - 11:30", "Engels"],
+    ["11:45 - 13:15", "Rekenen"],
+    ["13:45 - 15:15", "Economie"]
+  ]
+};
+
+const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
+const maanden = ["januari","februari","maart","april","mei","juni","juli"];
+
+function login(){
+  const email = document.getElementById("username").value.trim();
+  const wachtwoord = document.getElementById("password").value;
+
+  if(users[email] !== wachtwoord){
+    alert("E-mailadres of wachtwoord is onjuist.");
+    return;
+  }
+
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  showPage("rooster");
+}
+
+function logout(){
+  document.getElementById("app").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+}
+
+function datumTekst(d){
+  return `${dagen[d.getDay()]} ${d.getDate()} ${maanden[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function maakRooster(){
+  const start = new Date("2026-04-28");
+  const eind = new Date("2026-07-10");
+
+  for(let d = new Date(start); d <= eind; d.setDate(d.getDate()+1)){
+    const dag = d.getDay();
+
+    const eersteMei = d.getFullYear() === 2026 && d.getMonth() === 4 && d.getDate() === 1;
+const vierMei = d.getFullYear() === 2026 && d.getMonth() === 4 && d.getDate() === 4;
+const vakantie = d >= new Date("2026-05-05") && d <= new Date("2026-05-09");
+
+if (dag === 0 || dag === 6 || dag === 3 || eersteMei || vierMei || vakantie) continue;
+
+    const lokalen = {
+  "Nederlands": "1.92K",
+  "Workshop": "1.94K",
+  "Presentatie": "2.14K",
+  "D&P": "1.88K",
+  "Rekenen": "1.91K",
+  "Economie": "2.05K",
+  "Assistent": "1.97K",
+  "ICT": "2.22K",
+  "Engels": "1.90K"
+};
+
+patronen[dag].forEach(les => {
+  rooster.push({
+    datum: datumTekst(d),
+    tijd: les[0],
+    vak: les[1],
+    lokaal: lokalen[les[1]]
+  });
+});
+  }
+}
+
+function showPage(page){
+  document.getElementById("title").innerText = page.charAt(0).toUpperCase() + page.slice(1);
+  document.getElementById("menu").classList.remove("open");
+
+  if(page === "rooster") laadRooster();
+  if(page === "cijfers") laadCijfers();
+  if(page === "huiswerk") laadHuiswerk();
+  if(page === "berichten") laadBerichten();
+  if(page === "aanwezigheid") laadAanwezigheid();
+  if(page === "student") laadStudent();
+}
+function laadRooster() {
+  let html = "";
+  let huidigeDatum = "";
+  
+  rooster.forEach(item => {
+    if (item.datum !== huidigeDatum) {
+      huidigeDatum = item.datum;
+      html += `<div class="date">${item.datum}</div>`;
+    }
+    
+    html += `
+      <div class="rooster-card">
+        <div class="timebox">
+          ${item.tijd.split(" - ")[0]}<br>
+          ${item.tijd.split(" - ")[1]}
+        </div>
+        <div class="lessonbox">
+          ${item.vak}<br>
+          ${item.lokaal}
+        </div>
+      </div>
+    `;
+  });
+  
+  document.getElementById("content").innerHTML = html;
+}
+
+function laadCijfers() {
+  document.getElementById("content").innerHTML = `
+    <div class="card"><b>Nederlands</b><br>Schrijfopdracht<br>Cijfer: <span style="color:black"><b>7.2</b></span></div>
+    <div class="card"><b>Nederlands</b><br>Toets<br>Cijfer: <span style="color:black"><b>6.8</b></span></div>
+
+    <div class="card"><b>Workshop</b><br>Project<br>Cijfer: <span style="color:black"><b>8.3</b></span></div>
+
+    <div class="card"><b>Presentatie</b><br>Presentatie 1<br>Cijfer: <span style="color:black"><b>9.4</b></span></div>
+
+    <div class="card"><b>D&P</b><br>Praktijk<br>Cijfer: <span style="color:black"><b>6.5</b></span></div>
+
+    <div class="card"><b>Rekenen</b><br>Toets 1<br>Cijfer: <span style="color:red"><b>5.4</b></span></div>
+    <div class="card"><b>Rekenen</b><br>Toets 2<br>Cijfer: <span style="color:black"><b>6.1</b></span></div>
+
+    <div class="card"><b>Economie</b><br>Toets<br>Cijfer: <span style="color:black"><b>7.8</b></span></div>
+
+    <div class="card"><b>Assistent</b><br>Portfolio<br>Cijfer: <span style="color:black"><b>10.0</b></span></div>
+
+    <div class="card"><b>ICT</b><br>Opdracht<br>Cijfer: <span style="color:black"><b>6.9</b></span></div>
+
+    <div class="card"><b>Engels</b><br>Toets 1<br>Cijfer: <span style="color:red"><b>5.2</b></span></div>
+    <div class="card"><b>Engels</b><br>Toets 2<br>Cijfer: <span style="color:black"><b>6.7</b></span></div>
+  `;
+}
+
+function laadHuiswerk(){
+  document.getElementById("content").innerHTML = `
+    <div class="card"><b>Burgerschap</b><br>Maak opdracht 3 t/m 6</div>
+  `;
+}
+
+function laadBerichten(){
+  document.getElementById("content").innerHTML = `
+    <div class="card"><b>Welkom</b><br>Welkom in de MboRijnland app.</div>
+  `;
+}
+
+function laadAanwezigheid(){
+  document.getElementById("content").innerHTML = `
+    <div class="card profile">
+      <h2>Aanwezigheid</h2>
+      <div class="circle"><div class="circle-inner">84%</div></div>
+      <p><b>84%</b> aanwezig</p>
+      <p><b>16%</b> afwezig geoorloofd</p>
+    </div>
+  `;
+}
+
+function laadStudent() {
+  document.getElementById("content").innerHTML = `
+    
+    <div class="card profile">
+      <img src="foto.jpg" 
+           style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">
+      <h2>Anna Maria Elismparidou</h2>
+    </div>
+
+    <div class="card"><b>Naam:</b><br>Anna Maria Elismparidou</div>
+    <div class="card"><b>Adres:</b><br>Lizststraat 312<br>2551TN Den Haag</div>
+    <div class="card"><b>Telefoonnummer:</b><br>+31685794745</div>
+    <div class="card"><b>E-mail:</b><br>elisbaridou@gmail.com</div>
+    <div class="card"><b>SLB’er:</b><br>P. Van der Plas<br>K. Valkenduinen</div>
+  `;
+}
+
+function toggleMenu(){
+  document.getElementById("menu").classList.toggle("open");
+}
+
+maakRooster();
+</script>
+
+</body>
+</html>
